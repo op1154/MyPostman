@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MyPostm</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">MyPostm</div>
+  <nav class="screen-tabs" id="screenTabs">
+    <button class="screen-tab active" data-panel="panel-http">HTTP Client</button>
+    <button class="screen-tab" data-panel="panel-mcp">MCP Inspector</button>
+  </nav>
+  <div class="topbar-actions">
+    <button id="btnImportCurl" class="ghost">Import cURL</button>
+    <button id="btnCopyCurl" class="ghost">Copy as cURL</button>
+  </div>
+</header>
+
+<main class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-head">
+      <span>History</span>
+      <button id="btnClearHistory" class="link">Clear</button>
+    </div>
+    <ul id="historyList" class="history"></ul>
+  </aside>
+
+  <section class="workspace">
+    <div id="panel-http" class="screen-panel active">
+      <form id="requestBar" class="request-bar">
+        <select id="method" aria-label="HTTP method">
+          <option>GET</option>
+          <option>POST</option>
+          <option>PUT</option>
+          <option>PATCH</option>
+          <option>DELETE</option>
+          <option>HEAD</option>
+          <option>OPTIONS</option>
+        </select>
+        <input id="url" type="text" placeholder="https://api.example.com/resource" autocomplete="off" spellcheck="false" />
+        <button id="btnSend" type="submit" class="primary">Send</button>
+      </form>
+
+      <nav class="tabs" id="requestTabs">
+        <button class="tab active" data-panel="panel-params">Params</button>
+        <button class="tab" data-panel="panel-auth">Authorization</button>
+        <button class="tab" data-panel="panel-headers">Headers</button>
+        <button class="tab" data-panel="panel-body">Body</button>
+      </nav>
+
+      <div class="panels">
+        <div id="panel-params" class="panel active">
+          <table class="kv" id="paramsTable"><tbody></tbody></table>
+          <button class="link" data-add-row="paramsTable">+ Add query param</button>
+        </div>
+
+        <div id="panel-auth" class="panel">
+          <label class="field">
+            <span>Type</span>
+            <select id="authType">
+              <option value="none">No Auth</option>
+              <option value="basic">Basic</option>
+              <option value="bearer">Bearer Token</option>
+              <option value="jwt">JWT</option>
+            </select>
+          </label>
+
+          <div class="auth-form" data-auth="basic" hidden>
+            <label class="field"><span>Username</span><input id="basicUser" type="text" autocomplete="off" /></label>
+            <label class="field"><span>Password</span><input id="basicPass" type="password" autocomplete="off" /></label>
+          </div>
+
+          <div class="auth-form" data-auth="bearer" hidden>
+            <label class="field"><span>Token</span><textarea id="bearerToken" rows="3" spellcheck="false"></textarea></label>
+          </div>
+
+          <div class="auth-form" data-auth="jwt" hidden>
+            <label class="field"><span>Header prefix</span><input id="jwtPrefix" type="text" value="Bearer" /></label>
+            <label class="field"><span>Add to</span>
+              <select id="jwtTarget">
+                <option value="header">Header</option>
+                <option value="query">Query param</option>
+              </select>
+            </label>
+            <label class="field"><span>Key name</span><input id="jwtKey" type="text" value="Authorization" /></label>
+            <label class="field"><span>JWT</span><textarea id="jwtToken" rows="3" spellcheck="false"></textarea></label>
+            <div id="jwtPreview" class="jwt-preview"></div>
+          </div>
+        </div>
+
+        <div id="panel-headers" class="panel">
+          <table class="kv" id="headersTable"><tbody></tbody></table>
+          <button class="link" data-add-row="headersTable">+ Add header</button>
+        </div>
+
+        <div id="panel-body" class="panel">
+          <label class="field inline">
+            <span>Body type</span>
+            <select id="bodyType">
+              <option value="none">None</option>
+              <option value="json">JSON</option>
+              <option value="text">Raw text</option>
+              <option value="form">x-www-form-urlencoded</option>
+            </select>
+            <button id="btnFormatJson" class="link" type="button">Beautify JSON</button>
+          </label>
+          <textarea id="bodyText" rows="12" spellcheck="false" placeholder='{ "key": "value" }'></textarea>
+          <table class="kv" id="formTable" hidden><tbody></tbody></table>
+          <button class="link" data-add-row="formTable" hidden id="btnAddForm">+ Add field</button>
+        </div>
+      </div>
+
+      <section class="response">
+        <div class="response-head">
+          <strong>Response</strong>
+          <span id="respStatus" class="pill"></span>
+          <span id="respTime" class="muted"></span>
+          <span id="respSize" class="muted"></span>
+          <div class="spacer"></div>
+          <button id="btnCopyResp" class="link" type="button">Copy</button>
+        </div>
+        <nav class="tabs small" id="responseTabs">
+          <button class="tab active" data-panel="panel-resp-body">Body</button>
+          <button class="tab" data-panel="panel-resp-headers">Headers</button>
+        </nav>
+        <pre id="panel-resp-body" class="panel active output"></pre>
+        <pre id="panel-resp-headers" class="panel output"></pre>
+      </section>
+    </div>
+
+    <section id="panel-mcp" class="screen-panel">
+      <div class="mcp-header">
+        <div>
+          <h2>MCP Inspector</h2>
+          <p>Test JSON-RPC requests against an MCP server endpoint.</p>
+        </div>
+        <span id="mcpStatus" class="pill">Idle</span>
+      </div>
+
+      <div class="mcp-grid">
+        <div class="mcp-card">
+          <label class="field">
+            <span>Server URL</span>
+            <input id="mcpUrl" type="text" value="http://localhost:3001/mcp" autocomplete="off" spellcheck="false" />
+          </label>
+
+          <div class="mcp-actions">
+            <button id="btnMcpInitialize" class="primary" type="button">Initialize</button>
+            <button id="btnMcpPing" class="ghost" type="button">Ping</button>
+            <button id="btnMcpSend" class="ghost" type="button">Send request</button>
+          </div>
+
+          <label class="field">
+            <span>JSON-RPC method</span>
+            <select id="mcpMethod">
+              <option value="initialize">initialize</option>
+              <option value="ping">ping</option>
+              <option value="tools/list">tools/list</option>
+              <option value="tools/call">tools/call</option>
+              <option value="resources/list">resources/list</option>
+              <option value="resources/read">resources/read</option>
+              <option value="prompts/list">prompts/list</option>
+              <option value="prompts/get">prompts/get</option>
+              <option value="completion/complete">completion/complete</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Headers (JSON)</span>
+            <textarea id="mcpHeaders" rows="7" spellcheck="false">{"Content-Type":"application/json","Accept":"application/json, text/event-stream"}</textarea>
+          </label>
+
+          <label class="field">
+            <span>Payload (JSON)</span>
+            <textarea id="mcpRequest" rows="9" spellcheck="false">{
+  "protocolVersion": "2024-11-05",
+  "capabilities": {},
+  "clientInfo": {
+    "name": "MyPostm",
+    "version": "1.0.0"
+  }
+}</textarea>
+          </label>
+
+          <div class="mcp-tool-row">
+            <label class="field compact">
+              <span>Tool name</span>
+              <input id="mcpToolName" type="text" value="" placeholder="tool name" autocomplete="off" spellcheck="false" />
+            </label>
+            <button id="btnMcpCallTool" class="primary" type="button">Call tool</button>
+          </div>
+
+          <label class="field">
+            <span>Tool arguments (JSON)</span>
+            <textarea id="mcpToolArgs" rows="6" spellcheck="false">{
+  "query": "sample"
+}</textarea>
+          </label>
+
+          <div class="mcp-inline-actions">
+            <button id="btnMcpListTools" class="ghost" type="button">List tools</button>
+            <button id="btnMcpListResources" class="ghost" type="button">List resources</button>
+            <button id="btnMcpListPrompts" class="ghost" type="button">List prompts</button>
+          </div>
+        </div>
+
+        <div class="mcp-card output-card">
+          <div class="response-head">
+            <strong>Server response</strong>
+            <div class="spacer"></div>
+            <button id="btnCopyMcp" class="link" type="button">Copy</button>
+          </div>
+          <pre id="mcpResponse" class="output">Connect to an MCP server to inspect a response.</pre>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<dialog id="curlDialog">
+  <form method="dialog" class="dialog-form">
+    <h2>Import cURL</h2>
+    <textarea id="curlInput" rows="12" spellcheck="false" placeholder="curl -X POST https://api.example.com/login -H 'Content-Type: application/json' -d '{&quot;u&quot;:1}'"></textarea>
+    <p id="curlError" class="error"></p>
+    <menu>
+      <button value="cancel" class="ghost">Cancel</button>
+      <button id="btnDoImport" value="import" class="primary">Import</button>
+    </menu>
+  </form>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

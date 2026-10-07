@@ -1,0 +1,13 @@
+{
+  "name": "mypostm",
+  "version": "1.0.0",
+  "description": "Postman-like API client with cURL import and Basic/Bearer/JWT auth",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
